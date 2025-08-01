@@ -6,8 +6,9 @@ This is a demo of an orders api using Axum and SQLite.
 ## Setup
 For convenience I committed the sqlite database with it's basic setup.
 
-But just in case to setup from scratch. You'll need [sqlx cli](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md#install)
+To setup from scratch. You'll need [sqlx cli](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md#install)
 ```bash
+# delete and recreate the db
 rm db/db.sqlite && touch db/db.sqlite
 
 sqlx migrate run
