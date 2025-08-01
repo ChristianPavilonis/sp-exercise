@@ -34,7 +34,7 @@ To run the api run `cargo run` and it will launch on port 3000.
    - amount and status fields are required
  - get /orders/{id} will get a single order by id
  - patch /orders/{id} will update only the status of an order
-  - only requires the status field
+   - only requires the status field
  - delete /orders/{id}
 
 
