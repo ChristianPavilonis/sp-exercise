@@ -36,7 +36,7 @@ fn app(db: Db) -> Router {
         .route("/orders", get(get_orders).post(create_order))
         .route(
             "/orders/{id}",
-            get(get_order_by_id).patch(update_order_status),
+            get(get_order_by_id).patch(update_order_status).delete(delete_order),
         )
         .with_state(state)
 }
@@ -92,6 +92,18 @@ async fn update_order_status(
             Ok(())
         }
         None => Err(CustomError::RecordNotFound),
+    }
+}
+
+async fn delete_order(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<()> {
+    let db = &state.db;
+
+    match Order::delete_by_id(db, id).await? {
+        true => Ok(()),
+        false => Err(CustomError::RecordNotFound),
     }
 }
 
@@ -356,5 +368,56 @@ mod tests {
             serde_json::from_slice::<Vec<Order>>(&body).expect("should serialise into an order");
 
         assert_eq!(orders.len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_delete_order() {
+        let db = test_db().await;
+
+        let mut order = Order::new(500);
+        order
+            .save(&db)
+            .await
+            .expect("order should save without error");
+
+        let app = app(db.clone());
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri(format!(
+                        "/orders/{}",
+                        order.id.expect("should have id after save()")
+                    ))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let result = Order::get_by_id(&db, order.id.unwrap()).await.unwrap();
+        assert!(result.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_delete_order_not_found() {
+        let db = test_db().await;
+        let app = app(db);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("DELETE")
+                    .uri("/orders/999")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 }

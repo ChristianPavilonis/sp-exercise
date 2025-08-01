@@ -62,6 +62,14 @@ impl Order {
             .fetch_all(db)
             .await?)
     }
+
+    pub async fn delete_by_id(db: &Db, id: i64) -> Result<bool> {
+        let result = sqlx::query!("DELETE FROM orders WHERE id = ?", id)
+            .execute(db)
+            .await?;
+        
+        Ok(result.rows_affected() > 0)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Encode, PartialEq, Eq)]
@@ -170,5 +178,30 @@ mod tests {
         let results = Order::get_all(&db).await.expect("should not error");
 
         assert_eq!(results.len(), 5);
+    }
+
+    #[tokio::test]
+    async fn test_delete_order() {
+        let db = test_db().await;
+
+        let mut order = Order::new(500);
+        order
+            .save(&db)
+            .await
+            .expect("order should save without error");
+
+        let order_id = order.id.expect("order should have id after saved");
+
+        let deleted = Order::delete_by_id(&db, order_id)
+            .await
+            .expect("delete should not error");
+
+        assert!(deleted);
+
+        let result = Order::get_by_id(&db, order_id)
+            .await
+            .expect("query should not error");
+
+        assert!(result.is_none());
     }
 }
