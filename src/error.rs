@@ -7,7 +7,7 @@ pub type Result<T> = std::result::Result<T, CustomError>;
 pub enum CustomError {
     #[error("Record not found")]
     RecordNotFound,
-    #[error("Something's gone wrong!")]
+    #[error("Something went wrong!")]
     Other(#[from] anyhow::Error),
 }
 
@@ -15,8 +15,8 @@ pub enum CustomError {
 impl IntoResponse for CustomError {
     fn into_response(self) -> Response<Body> {
         let (status, message) = match self {
-            CustomError::RecordNotFound => (StatusCode::NOT_FOUND, "RECORD_NOT_FOUND"),
-            CustomError::Other(_) => (StatusCode::INTERNAL_SERVER_ERROR, "UNHANDLED_CLIENT_ERROR"),
+            CustomError::RecordNotFound => (StatusCode::NOT_FOUND, "404 Record not found"),
+            CustomError::Other(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong!"),
         };
 
         let body = Body::from(message.to_string());

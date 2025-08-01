@@ -116,6 +116,7 @@ mod tests {
     };
     use db::test_db;
     use http_body_util::BodyExt;
+    use sqlx::sqlite::SqlitePoolOptions;
     use tower::ServiceExt;
 
     #[tokio::test]
@@ -420,4 +421,35 @@ mod tests {
 
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
+
+
+
+    #[tokio::test]
+    async fn test_server_error() {
+        // create a database but don't run migrations to get queries to fail and cause a 500
+        let db = SqlitePoolOptions::new().connect(":memory:").await.unwrap();
+
+        let app = app(db);
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/orders")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        let body = std::str::from_utf8(&body).unwrap();
+
+        assert!(body.contains("Something went wrong!"));
+    }
+
+
+
 }
