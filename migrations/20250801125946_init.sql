@@ -1,0 +1,5 @@
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    status TEXT NOT NULL,
+    amount INTEGER NOT NULL
+);
