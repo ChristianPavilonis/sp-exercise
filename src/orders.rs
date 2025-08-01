@@ -65,6 +65,7 @@ impl Order {
 }
 
 #[derive(Debug, Serialize, Deserialize, Encode, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
 pub enum OrderStatus {
     Pending,
     InProgress,
