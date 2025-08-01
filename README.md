@@ -43,7 +43,7 @@ To run the api run `cargo run` and it will launch on port 3000.
 
 I'm familliar with Axum so I decided to use that, Axum comes with some nice tools out of the box:
 - Router, let's us define our routes and HTTP verbs to go with them.
-- Extractors, they act like middleware allowing convenient ways to deserialize a json body into a struct and it will provide error messages for us and return the proper http status code when validation fails. It would require a bit of customization to get more robust errors.
+- Extractors, they act like middleware and allow for convenient ways to deserialize a json body into a struct and it will provide error messages for us and return the proper http status code when validation fails. It would require a bit of customization to get more robust errors.
 - Application state, Axum will manage application state for us and allows me to pass the database pool around to different functions.
 
 I've also used sqlx with SQLite on a few projects
@@ -54,8 +54,10 @@ I've also used sqlx with SQLite on a few projects
 
 I made a module for orders to contain all the logic there and implemented CRUD functionality on the Order struct, and wrote tests for those in there.
 
-Then I wrote the http endpoints and used my implementation, I also created a custom Error type using thiserror, any error from my implementation will become a 500 error, and any time I encounter a None when trying to get from the database I return a 404.
+Then I wrote the http endpoints and used my implementation, I also created a custom Error type in `error.rs` using thiserror, any error from my implementation will become a 500 error, and any time I encounter a None when trying to get from the database I return the RecordNotFound error which turns into a 404.
+
 The internal server error returns a generic error message, this is good for production, but adding some logging with more context would be ideal.
+
 This is also where other error types such as autherization errors could be put.
 
 I wrote tests in `main.rs` to keep things simple testing all the endpoints, including bad input and 404s. I only wrote one test for 500 errrors, starting the app with an incomplete database, because in theory with this api that's the only dependency that could go wrong. 
@@ -64,7 +66,9 @@ I wrote tests in `main.rs` to keep things simple testing all the endpoints, incl
 ### Other considerations
 
 For getting all the orders they should be paginated.
+
 A real application would require authentication.
+
 It would perhaps be better to have OrderRequest struct for the create_order endpoint instead of using the internal Order struct, because any changes to the internal Order would be a breaking change to the REST api.
 
 
